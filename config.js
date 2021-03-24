@@ -2,7 +2,7 @@ const config = {
   'mainnet': {
     'network': '1',
     'contractAddress': {
-      'layer2': '',
+      'layer2': '0xCc38C7aaf2507da52A875e93F57451e58E8c6372',
       'managers': {
         "TON":"0x2be5e8c109e2197d077d13a82daead6a9b3433c5",
         "WTON":"0xc4A11aaf6ea915Ed7Ac194161d2fC9384F15bff2",
