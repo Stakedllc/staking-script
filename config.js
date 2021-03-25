@@ -16,7 +16,7 @@ const config = {
   'rinkeby': {
     'network': '4',
     'contractAddress': {
-      'layer2': '0x4B2ca992AcE7D770D9f9A0c3eEEc9711059BE474',
+      'layer2': '0xD37848366A0048Ec4D834EF200e45d5bEC6BBEa7',
       'managers': {
         "TON":"0x44d4F5d89E9296337b8c48a332B3b2fb2C190CD0",
         "WTON":"0x709bef48982Bbfd6F2D4Be24660832665F53406C",
