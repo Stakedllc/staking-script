@@ -83,15 +83,28 @@ async function main() {
       gasPrice,
     };
 
-    if (nonce) {
-      txObject.nonce = nonce;
-    }
     const param = new BN(parameters[0]).toString();
+    const query = contract.methods[ functionName ](...[wton, param, getData(networkName)]);
+    const encodedData = query.encodeABI();
 
-    await contract[ functionName ](...[ wton, param, getData(),
-      txObject ]).then(JSON.stringify)
-      .then(console.log)
-      .catch(console.error);
+    const txn = {
+      from: from,
+      to: contractAddress,
+      gasPrice: gasPrice,
+      gas: gasLimit,
+      value: 0,
+      chainId: networkId,
+      data: encodedData
+    };
+
+    // if we want to manually override the nonce to speed up a txn, etc.
+    if (nonce) {
+      txn.nonce = nonce;
+    }
+
+    // sign and sending the transaction
+    await signAndSendTransaction(web3, txn, pk);
+
   } else if (functionName === 'requestWithdrawal') {
     const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
@@ -259,7 +272,7 @@ function marshalString (str) {
   return '0x'.concat(str);
 }
 
-function getData () {
+function getData (networkName) {
   const data = marshalString(
     [getConfig()[networkName].contractAddress.managers.DepositManager, getConfig()[networkName].contractAddress.layer2]
       .map(function (value, index) {
@@ -299,4 +312,20 @@ function loadWeb3FromMnemonic(providerUrl, privatekey) {
 
   const from = provider.address;
   return { web3, from };
+}
+
+async function signAndSendTransaction(web3, txn, pk) {
+  const signed = await web3.eth.accounts.signTransaction(txn, pk);
+
+  return await web3.eth
+    .sendSignedTransaction(signed.rawTransaction)
+    .on("transactionHash", (hash) => {
+      console.log(`hash: ${hash}`);
+    })
+    .on("receipt", (receipt) => {
+      console.log(`receipt: ${receipt}`);
+    })
+    .on("error", (err) => {
+      console.log(`error: ${err}`);
+    });
 }
