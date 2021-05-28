@@ -15,6 +15,7 @@ const defaultWeiAmount = 0;
 const defaultGasLimit = 4500000;
 const defaultGasPrice = 20e9;
 const defaultNonce = null;
+const defaultNetworkName = 'rinekby';
 
 program
   .option("-f, --function-name [value]", "required. function to call")
@@ -38,7 +39,7 @@ async function main() {
   const {
     functionName,
     networkId = null,
-    networkName = 'rinkeby',
+    networkName = defaultNetworkName,
     infura = false,
     infuraAccessToken = "",
     gasLimit = defaultGasLimit,
@@ -69,7 +70,6 @@ async function main() {
   logger("gas limit", gasLimit);
   logger("gas price", gasPrice);
   logger("nonce", nonce);
-  logger("private key", pk);
 
   if (functionName === 'approveAndCall') {
     const contractAddress = getConfig()[networkName].contractAddress.managers.TON;
