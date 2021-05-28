@@ -13,6 +13,7 @@ npm install
 -f, --function-name [value], required. function to call
 -i, --network-id [value], required for infura. ethereum network id. 1 for mainsale, 4 for rinkeby.
 -n, --network-name [value], required for config, ethereum network name. 'mainnet' for mainnet, default is 'rinkeby' for rinkeby.
+-c, --chain-id [value], required for txn broadcast, chain id. '1' for mainnet, default is '4' for rinkeby.
 -p, --parameters [value]>, `arguments for function split by comma. default ${ defaultParameters }`, parseParams
 -l, --provider-url [url], `web3 provider url. default ${ defaultProviderUrl }`
 -L, --gas-limit [value], `gas limit for transaction. default ${ defaultGasLimit }`
@@ -43,7 +44,7 @@ stake 1 TON
 
 If you want to stake 1 TON, insert 1e18.
 ```
-node app.js --provider-url https://rinkeby.infura.io/v3/*** -k <privateKey> -f approveAndCall -p 1000000000000000000
+node app.js --provider-url https://rinkeby.infura.io/v3/*** -k <privateKey> -f approveAndCall -c 4 -n rinkeby -p 1000000000000000000
 ```
 
 #### Unstake

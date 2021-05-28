@@ -16,11 +16,13 @@ const defaultGasLimit = 4500000;
 const defaultGasPrice = 20e9;
 const defaultNonce = null;
 const defaultNetworkName = 'rinkeby';
+const defaultChainId = 4;
 
 program
   .option("-f, --function-name [value]", "required. function to call")
   .option("-i, --network-id [value]", "required for infura. ethereum network id. 1 for mainsale, 3 for rinkeby.")
   .option("-n, --network-name [value]", "required for config, ethereum network name. 'mainnet' for mainnet, 'rinkeby' for rinkeby.")
+  .option("-c, --chain-id [value], required for txn broadcast, chain id. '1' for mainnet, default is '4' for rinkeby.")
   .option("-p, --parameters [value]>", `arguments for function split by comma. default ${ defaultParameters }`, parseParams)
   .option("-I, --infura", "whether use infura network. this option override provider url. default false")
   .option("-A, --infura-access-token [accessToken]", "access token for infura node. default emptyString")
@@ -40,6 +42,7 @@ async function main() {
     functionName,
     networkId = null,
     networkName = defaultNetworkName,
+    chainId = defaultChainId,
     infura = false,
     infuraAccessToken = "",
     gasLimit = defaultGasLimit,
@@ -93,7 +96,7 @@ async function main() {
       gasPrice: gasPrice,
       gas: gasLimit,
       value: 0,
-      chainId: networkId,
+      chainId: chainId,
       data: encodedData
     };
 
