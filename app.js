@@ -19,6 +19,7 @@ const defaultNonce = null;
 program
   .option("-f, --function-name [value]", "required. function to call")
   .option("-i, --network-id [value]", "required for infura. ethereum network id. 1 for mainsale, 3 for rinkeby.")
+  .option("-n, --network-name [value]", "required for config. ethereum network name. 'mainnet' for mainnet, 'rinkeby' for rinkeby.")
   .option("-p, --parameters [value]>", `arguments for function split by comma. default ${ defaultParameters }`, parseParams)
   .option("-I, --infura", "whether use infura network. this option override provider url. default false")
   .option("-A, --infura-access-token [accessToken]", "access token for infura node. default emptyString")
@@ -37,6 +38,7 @@ async function main() {
   const {
     functionName,
     networkId = null,
+    networkName = 'rinkeby',
     infura = false,
     infuraAccessToken = "",
     gasLimit = defaultGasLimit,
@@ -58,6 +60,7 @@ async function main() {
   const { web3, from } = loadWeb3FromMnemonic(providerUrl, pk);
 
   logger("network id", networkId);
+  logger("network name", networkName);
   logger("provider url", providerUrl);
   logger("from", from);
   logger("function name", functionName);
@@ -69,9 +72,9 @@ async function main() {
   logger("private key", pk);
 
   if (functionName === 'approveAndCall') {
-    const contractAddress = getConfig().contractAddress.managers.TON;
-    const contract = await loadContract(web3, 'TON', contractAddress)
-    const wton = getConfig().contractAddress.managers.WTON;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.TON;
+    const contract = await loadContract(web3, 'TON', contractAddress);
+    const wton = getConfig()[networkName].contractAddress.managers.WTON;
 
     const txObject = {
       from,
@@ -202,7 +205,7 @@ async function main() {
         num ++;
       }
     }
-    
+
     if (num == 0) {
       console.log("No withdrawable request exist!");
       process.exit(1);
