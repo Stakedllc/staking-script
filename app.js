@@ -79,13 +79,6 @@ async function main() {
     const contract = await loadContract(web3, 'TON', contractAddress);
     const wton = getConfig()[networkName].contractAddress.managers.WTON;
 
-    const txObject = {
-      from,
-      value: weiAmount,
-      gas: gasLimit,
-      gasPrice,
-    };
-
     const param = new BN(parameters[0]).toString();
     const query = contract.methods[ functionName ](...[wton, param, getData(networkName)]);
     const encodedData = query.encodeABI();
