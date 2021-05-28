@@ -20,7 +20,7 @@ const defaultNetworkName = 'rinekby';
 program
   .option("-f, --function-name [value]", "required. function to call")
   .option("-i, --network-id [value]", "required for infura. ethereum network id. 1 for mainsale, 3 for rinkeby.")
-  .option("-n, --network-name [value]", "required for config. ethereum network name. 'mainnet' for mainnet, 'rinkeby' for rinkeby.")
+  .option("-n, --network-name [value]", "required for config, ethereum network name. 'mainnet' for mainnet, 'rinkeby' for rinkeby.")
   .option("-p, --parameters [value]>", `arguments for function split by comma. default ${ defaultParameters }`, parseParams)
   .option("-I, --infura", "whether use infura network. this option override provider url. default false")
   .option("-A, --infura-access-token [accessToken]", "access token for infura node. default emptyString")
@@ -93,9 +93,9 @@ async function main() {
       .then(console.log)
       .catch(console.error);
   } else if (functionName === 'requestWithdrawal') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -119,7 +119,7 @@ async function main() {
       .catch(console.error);
 
   } else if (functionName === 'commit') {
-    const contractAddress = getConfig().contractAddress.layer2;
+    const contractAddress = getConfig()[networkName].contractAddress.layer2;
     const contract = await loadContract(web3, 'Layer2', contractAddress);
 
     const costNRB = await contract.methods.COST_NRB().call();
@@ -157,9 +157,9 @@ async function main() {
     .catch(console.error);
 
   } else if (functionName == 'redepositMulti') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -179,9 +179,9 @@ async function main() {
       .then(console.log)
       .catch(console.error);
   } else if (functionName == 'processRequests') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -261,7 +261,7 @@ function marshalString (str) {
 
 function getData () {
   const data = marshalString(
-    [getConfig().contractAddress.managers.DepositManager, getConfig().contractAddress.layer2]
+    [getConfig()[networkName].contractAddress.managers.DepositManager, getConfig()[networkName].contractAddress.layer2]
       .map(function (value, index) {
         if (value.slice(0, 2) === '0x') return value.slice(2);
         return value;

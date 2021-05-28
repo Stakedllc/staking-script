@@ -12,6 +12,7 @@ npm install
 ```
 -f, --function-name [value], required. function to call
 -i, --network-id [value], required for infura. ethereum network id. 1 for mainsale, 4 for rinkeby.
+-n, --network-name [value], required for config, ethereum network name. 'mainnet' for mainnet, default is 'rinkeby' for rinkeby.
 -p, --parameters [value]>, `arguments for function split by comma. default ${ defaultParameters }`, parseParams
 -l, --provider-url [url], `web3 provider url. default ${ defaultProviderUrl }`
 -L, --gas-limit [value], `gas limit for transaction. default ${ defaultGasLimit }`
