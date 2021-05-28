@@ -15,7 +15,7 @@ const defaultWeiAmount = 0;
 const defaultGasLimit = 4500000;
 const defaultGasPrice = 20e9;
 const defaultNonce = null;
-const defaultNetworkName = 'rinekby';
+const defaultNetworkName = 'rinkeby';
 
 program
   .option("-f, --function-name [value]", "required. function to call")
