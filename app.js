@@ -319,7 +319,7 @@ async function signAndSendTransaction(web3, txn, pk) {
       console.log(`hash: ${hash}`);
     })
     .on("receipt", (receipt) => {
-      console.log(`receipt: ${receipt}`);
+      console.log(`receipt: ${JSON.stringify(receipt)}`);
     })
     .on("error", (err) => {
       console.log(`error: ${err}`);
