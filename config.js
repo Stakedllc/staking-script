@@ -30,6 +30,6 @@ const config = {
 };
 
 exports.getConfig = function () {
-  
-  return config.mainnet;
+
+  return config;
 }

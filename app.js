@@ -15,10 +15,14 @@ const defaultWeiAmount = 0;
 const defaultGasLimit = 4500000;
 const defaultGasPrice = 20e9;
 const defaultNonce = null;
+const defaultNetworkName = 'rinkeby';
+const defaultChainId = 4;
 
 program
   .option("-f, --function-name [value]", "required. function to call")
   .option("-i, --network-id [value]", "required for infura. ethereum network id. 1 for mainsale, 3 for rinkeby.")
+  .option("-n, --network-name [value]", "required for config, ethereum network name. 'mainnet' for mainnet, 'rinkeby' for rinkeby.")
+  .option("-c, --chain-id [value], required for txn broadcast, chain id. '1' for mainnet, default is '4' for rinkeby.")
   .option("-p, --parameters [value]>", `arguments for function split by comma. default ${ defaultParameters }`, parseParams)
   .option("-I, --infura", "whether use infura network. this option override provider url. default false")
   .option("-A, --infura-access-token [accessToken]", "access token for infura node. default emptyString")
@@ -37,6 +41,8 @@ async function main() {
   const {
     functionName,
     networkId = null,
+    networkName = defaultNetworkName,
+    chainId = defaultChainId,
     infura = false,
     infuraAccessToken = "",
     gasLimit = defaultGasLimit,
@@ -58,6 +64,7 @@ async function main() {
   const { web3, from } = loadWeb3FromMnemonic(providerUrl, pk);
 
   logger("network id", networkId);
+  logger("network name", networkName);
   logger("provider url", providerUrl);
   logger("from", from);
   logger("function name", functionName);
@@ -66,33 +73,38 @@ async function main() {
   logger("gas limit", gasLimit);
   logger("gas price", gasPrice);
   logger("nonce", nonce);
-  logger("private key", pk);
 
   if (functionName === 'approveAndCall') {
-    const contractAddress = getConfig().contractAddress.managers.TON;
-    const contract = await loadContract(web3, 'TON', contractAddress)
-    const wton = getConfig().contractAddress.managers.WTON;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.TON;
+    const contract = await loadContract(web3, 'TON', contractAddress);
+    const wton = getConfig()[networkName].contractAddress.managers.WTON;
 
-    const txObject = {
-      from,
-      value: weiAmount,
+    const param = new BN(parameters[0]).toString();
+    const query = contract.methods[ functionName ](...[wton, param, getData(networkName)]);
+    const encodedData = query.encodeABI();
+
+    const txn = {
+      from: from,
+      to: contractAddress,
+      gasPrice: gasPrice,
       gas: gasLimit,
-      gasPrice,
+      value: 0,
+      chainId: chainId,
+      data: encodedData
     };
 
+    // if we want to manually override the nonce to speed up a txn, etc.
     if (nonce) {
-      txObject.nonce = nonce;
+      txn.nonce = nonce;
     }
-    const param = new BN(parameters[0]).toString();
 
-    await contract[ functionName ](...[ wton, param, getData(),
-      txObject ]).then(JSON.stringify)
-      .then(console.log)
-      .catch(console.error);
+    // sign and sending the transaction
+    await signAndSendTransaction(web3, txn, pk);
+
   } else if (functionName === 'requestWithdrawal') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -116,7 +128,7 @@ async function main() {
       .catch(console.error);
 
   } else if (functionName === 'commit') {
-    const contractAddress = getConfig().contractAddress.layer2;
+    const contractAddress = getConfig()[networkName].contractAddress.layer2;
     const contract = await loadContract(web3, 'Layer2', contractAddress);
 
     const costNRB = await contract.methods.COST_NRB().call();
@@ -154,9 +166,9 @@ async function main() {
     .catch(console.error);
 
   } else if (functionName == 'redepositMulti') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -176,9 +188,9 @@ async function main() {
       .then(console.log)
       .catch(console.error);
   } else if (functionName == 'processRequests') {
-    const contractAddress = getConfig().contractAddress.managers.DepositManager;
+    const contractAddress = getConfig()[networkName].contractAddress.managers.DepositManager;
     const contract = await loadContract(web3, 'DepositManager', contractAddress);
-    const layer2 = await getConfig().contractAddress.layer2;
+    const layer2 = await getConfig()[networkName].contractAddress.layer2;
     const txObject = {
       from,
       value: weiAmount,
@@ -202,7 +214,7 @@ async function main() {
         num ++;
       }
     }
-    
+
     if (num == 0) {
       console.log("No withdrawable request exist!");
       process.exit(1);
@@ -256,9 +268,9 @@ function marshalString (str) {
   return '0x'.concat(str);
 }
 
-function getData () {
+function getData (networkName) {
   const data = marshalString(
-    [getConfig().contractAddress.managers.DepositManager, getConfig().contractAddress.layer2]
+    [getConfig()[networkName].contractAddress.managers.DepositManager, getConfig()[networkName].contractAddress.layer2]
       .map(function (value, index) {
         if (value.slice(0, 2) === '0x') return value.slice(2);
         return value;
@@ -296,4 +308,20 @@ function loadWeb3FromMnemonic(providerUrl, privatekey) {
 
   const from = provider.address;
   return { web3, from };
+}
+
+async function signAndSendTransaction(web3, txn, pk) {
+  const signed = await web3.eth.accounts.signTransaction(txn, pk);
+
+  return await web3.eth
+    .sendSignedTransaction(signed.rawTransaction)
+    .on("transactionHash", (hash) => {
+      console.log(`hash: ${hash}`);
+    })
+    .on("receipt", (receipt) => {
+      console.log(`receipt: ${JSON.stringify(receipt)}`);
+    })
+    .on("error", (err) => {
+      console.log(`error: ${err}`);
+    });
 }
